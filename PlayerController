@@ -1,0 +1,87 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+
+[RequireComponent(typeof(Rigidbody))]
+public class PlayerController : MonoBehaviour
+{
+    public float Speed = 5f;
+
+    public float JumpForce = 100f;
+
+    private bool _isGrounded;
+    private Rigidbody _rb;
+
+    //private CharacterController ch_controller;
+
+    void Start()
+    {
+        //Cursor.lockState = CursorLockMode.Locked;
+        //Cursor.visible = false;
+
+        _rb = GetComponent<Rigidbody>();
+        _rb.constraints = RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationZ;
+        //ch_controller = GetComponent<CharacterController>();
+    }
+
+
+    void FixedUpdate()
+    {
+        JumpLogic();
+        MovementLogic();
+    }
+
+    private void MovementLogic()
+    {
+        float h = Input.GetAxis("Horizontal");
+        float v = Input.GetAxis("Vertical");
+
+        Vector3 directionVector = new Vector3(h,0,v);
+
+        _rb.velocity = Vector3.ClampMagnitude(directionVector, 1) * Speed;
+
+        if (directionVector.magnitude > Mathf.Abs(0.05f)) 
+        {
+            transform.rotation = Quaternion.Lerp(transform.rotation, Quaternion.LookRotation(directionVector), Time.deltaTime * 10);
+        }
+
+        //if (Vector3.Angle(Vector3.forward, movement) > 1f || Vector3.Angle(Vector3.forward, movement) == 0) 
+        //{
+        //    Vector3 direct = Vector3.RotateTowards(transform.forward, movement, Speed, 0.0f);
+        //    transform.rotation = Quaternion.LookRotation(direct);
+        //}
+
+        //ch_controller.Move(movement * Time.fixedDeltaTime);
+        //transform.Translate(movement * Time.fixedDeltaTime);
+    }
+
+    private void JumpLogic()
+    {
+        if (Input.GetAxis("Jump") > 0)
+        {
+            if (_isGrounded)
+            {
+                _rb.AddForce(Vector3.up * JumpForce);
+            }
+        }
+    }
+
+    void OnCollisionEnter(Collision collision)
+    {
+        IsGroundedUpate(collision, true);
+    }
+
+    void OnCollisionExit(Collision collision)
+    {
+        IsGroundedUpate(collision, false);
+    }
+
+    private void IsGroundedUpate(Collision collision, bool value)
+    {
+        if (collision.gameObject.tag == ("Ground"))
+        {
+            _isGrounded = value;
+        }
+    }
+}
